@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+mlflow.db*
+mlartifacts/
+models/*
+reports/*.json
+reports/runs/
+reports/figures/*
+reports/tp1_report.md
+.DS_Store
