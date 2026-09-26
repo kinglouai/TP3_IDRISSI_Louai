@@ -10,5 +10,5 @@ mlflow:
   experiment_name: tp1-predictive-maintenance
 model:
   type: logistic_regression
-  C: 0.1
+  C: 1.0
   max_iter: 1000
