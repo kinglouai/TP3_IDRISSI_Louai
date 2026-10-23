@@ -79,8 +79,8 @@ Les données brutes d'entraînement (`machines.csv`) ne sont pas intégrées dan
 
 | Exécution | Commit | Étape | Résultat | Preuve |
 |---|---|---|---|---|
-| Job vert | `c3a4f81` | Pipeline GitHub Actions complet (`uv sync --locked` -> `ruff` -> `pytest` -> `bootstrap` -> `docker build` -> `smoke test`) | `PASS` (toutes les étapes validées, tests verts, rapport JUnit conforme) | `reports/figures/08_ci_green.svg` |
-| Échec contrôlé | `e9f2b14` | Injection d'une non-conformité de typage ou de linting (`ruff check`) | `FAIL` (le pipeline s'arrête immédiatement avant la construction Docker) | `reports/figures/09_ci_failure.svg` |
+| Job vert | `2591938` | Pipeline complet (sync uv, audit dépendances, tests pytest, bootstrap TP2, build image Docker et smoke test HTTP) — Run GitHub Actions #39988964453 | `PASS` (1m33s, 23 tests OK, smoke test ACCEPT) | `reports/figures/08_ci_green.svg` |
+| Échec contrôlé | `3c467f9` | Étape `Vérifier le style` (`ruff check .`) — Injection d'imports inutilisés F401 sur la branche `ci-controlled-failure` — Run GitHub Actions #39989356213 | `FAIL` (interruption immédiate en 21s avant toute phase de test ou de conteneurisation) | `reports/figures/09_ci_failure.svg` |
 
 Le workflow `.github/workflows/mlops-ci.yml` exécute la séquence stricte suivante :
 1. `uv sync --locked` : vérification déterministe de l'arbre des dépendances ;
