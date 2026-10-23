@@ -1,0 +1,130 @@
+schema: '2.0'
+stages:
+  validate:
+    cmd: python -m maintenance_ml.data.validate
+    deps:
+    - path: data/raw/machines.csv
+      hash: md5
+      md5: c0789b9e5ac50e6f2eb1e726abf0cb50
+      size: 201295
+    - path: maintenance_ml/data/schema.py
+      hash: md5
+      md5: eb89a6a14601290571b5cdfa17767e2f
+      size: 736
+    - path: maintenance_ml/data/validate.py
+      hash: md5
+      md5: 61e9540cf31f99a954317d689b9e2b39
+      size: 1624
+    outs:
+    - path: reports/data_validation.json
+      hash: md5
+      md5: 4f8d608e243d1fc307a75abc10836e51
+      size: 146
+  prepare:
+    cmd: python -m maintenance_ml.data.prepare
+    deps:
+    - path: data/raw/machines.csv
+      hash: md5
+      md5: c0789b9e5ac50e6f2eb1e726abf0cb50
+      size: 201295
+    - path: maintenance_ml/data/prepare.py
+      hash: md5
+      md5: e7c0c5dceb7536ca3a9f7c8c7b502166
+      size: 1317
+    - path: reports/data_validation.json
+      hash: md5
+      md5: 4f8d608e243d1fc307a75abc10836e51
+      size: 146
+    params:
+      params.yaml:
+        seed: 42
+        test_size: 0.25
+    outs:
+    - path: data/processed/test.csv
+      hash: md5
+      md5: d1782e45febc9b8921d2a919980a290a
+      size: 50448
+    - path: data/processed/train.csv
+      hash: md5
+      md5: d57b1537f8b61c5feb0bf0ee76cb32fa
+      size: 150972
+  train:
+    cmd: python -m maintenance_ml.modeling.train
+    deps:
+    - path: data/processed/train.csv
+      hash: md5
+      md5: d57b1537f8b61c5feb0bf0ee76cb32fa
+      size: 150972
+    - path: maintenance_ml/modeling/train.py
+      hash: md5
+      md5: cb2b7a39a8cfd73c4925839a621a1aa4
+      size: 8031
+    params:
+      params.yaml:
+        model.C: 1.0
+        model.max_iter: 1000
+        seed: 42
+    outs:
+    - path: models/model.joblib
+      hash: md5
+      md5: 6d3b320ee7cea566b25394a1a3f5df50
+      size: 3521
+  evaluate:
+    cmd: python -m maintenance_ml.modeling.evaluate
+    deps:
+    - path: data/processed/test.csv
+      hash: md5
+      md5: d1782e45febc9b8921d2a919980a290a
+      size: 50448
+    - path: maintenance_ml/modeling/evaluate.py
+      hash: md5
+      md5: a50671e253cfafcea8c5dd0849f09039
+      size: 3253
+    - path: models/model.joblib
+      hash: md5
+      md5: 6d3b320ee7cea566b25394a1a3f5df50
+      size: 3521
+    params:
+      params.yaml:
+        mlflow.experiment_name: tp2-predictive-maintenance
+        mlflow.tracking_uri: http://127.0.0.1:5000
+    outs:
+    - path: reports/metrics.json
+      hash: md5
+      md5: fccf8b0d9d66c38db4aea2ea81d0bf15
+      size: 104
+    - path: reports/run_manifest.json
+      hash: md5
+      md5: bb05c06d936223326e0fb6ad3830f104
+      size: 477
+  quality_gate:
+    cmd: python -m maintenance_ml.modeling.quality_gate
+    deps:
+    - path: maintenance_ml/modeling/quality_gate.py
+      hash: md5
+      md5: 20655ea0deef0aa1ecad395932d6cbfe
+      size: 3058
+    - path: quality_gates/baseline_metrics.json
+      hash: md5
+      md5: df20a6e6e6bc27355bea429913ca527f
+      size: 122
+    - path: reports/metrics.json
+      hash: md5
+      md5: fccf8b0d9d66c38db4aea2ea81d0bf15
+      size: 104
+    - path: reports/run_manifest.json
+      hash: md5
+      md5: bb05c06d936223326e0fb6ad3830f104
+      size: 477
+    params:
+      params.yaml:
+        quality_gate.max_f1_drop: 0.15
+        quality_gate.max_recall_drop: 0.15
+        quality_gate.min_f1: 0.5
+        quality_gate.min_precision: 0.5
+        quality_gate.min_recall: 0.35
+    outs:
+    - path: reports/quality_gate_decision.json
+      hash: md5
+      md5: 15aa1c1d7d58f8d4ace6e41023263977
+      size: 557

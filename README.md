@@ -1,88 +1,235 @@
-# TP1 — Projet de départ : expérience reproductible
+# Starter TP3 — Serving, Registry, CI/CD et promotion
 
-Ce projet accompagne l'énoncé du TP1. Le ZIP contient directement la racine du
-projet : toutes les commandes ci-dessous s'exécutent ici.
+TP individuel : construisez, testez et documentez le service dans votre propre
+copie du kit. L'archive se décompresse directement à la racine du projet, là où
+se trouvent `pyproject.toml`, `uv.lock` et `Makefile`.
 
-**Échéance de soumission : mercredi 30 septembre 2026 à 23 h 59. Aucun retard
-n'est accepté.**
+## Objectif et continuité avec le TP2
 
-## Rôle du projet
+Le TP2 est le point d'entrée : seul un modèle dont
+`reports/quality_gate_decision.json` porte `decision: ACCEPT` peut être servi et
+enregistré. Le TP3 ajoute le cycle de vie professionnel :
 
-La régression logistique sert de support à l'étude d'une expérience MLOps
-traçable, configurable et réexécutable. Le TP évalue les preuves produites,
-l'organisation du pipeline et l'interprétation des résultats; il ne demande pas
-d'améliorer le score ni de rechercher un autre algorithme.
-
-Le jeu de données est fourni pour ce laboratoire. Consultez `docs/donnees.md`
-pour sa provenance, sa licence et ses limites d'interprétation.
-
-## Environnement pris en charge
-
-Linux, macOS avec outils de compilation/Make, ou Windows **dans WSL2 Ubuntu**.
-PowerShell seul n'est pas pris en charge. Python de référence : 3.13, sélectionné
-par `.python-version`. `uv.lock` verrouille les dépendances, pas l'interpréteur.
-Internet est nécessaire à la première installation; le mode hors ligne suppose
-que Python et toutes les dépendances sont déjà dans le cache.
-
-```bash
-uv python install 3.13
-make install
-make config
-make report
-make doctor
-make test
-make inspect-data
-make notebook
+```text
+TP2 ACCEPT → import/bootstrap → MLflow Registry → challenger
+→ CI + image Docker → promotion contrôlée → champion → TP4
 ```
 
-Dans Jupyter, ouvrez `notebooks/0.01-starter.ipynb`. Vérifiez le kernel avec
-`import sys; print(sys.executable)` : il doit pointer vers `.venv` du kit.
-Le notebook travaille dans `notebooks/`; le programme travaille depuis la racine.
+Deux parcours d'entrée sont disponibles :
 
-## Ce qui est fourni et ce qui reste à écrire
+```bash
+make import-tp2 TP2_DIR=/chemin/vers/TP2
+make bootstrap-reference       # secours reproductible si TP2 est indisponible
+```
 
-- Données et notebook fonctionnels; le preprocessing du notebook est déjà sans fuite.
-- `maintenance_ml/modeling/train.py` : squelette, fonctions à compléter.
-- `docs/contrat.md` : formats exacts des sorties et exemple MLflow.
-- `tests/validate_submission.py` : contrôles automatiques du résultat.
-- `scripts/evidence.py` : conservation des runs et création de l'archive.
+Le second parcours produit un checkpoint local identifié comme
+`bootstrap-reference`. Il doit être signalé comme tel dans le rapport. Le TP3
+ne réentraîne jamais implicitement un modèle pendant `make pipeline`.
 
-`make test` vérifie l'installation et les contrôles du kit. Il ne valide pas
-votre pipeline. `make train` échoue avec `NotImplementedError` tant que le
-squelette n'est pas complété : cet échec initial est attendu.
-`make inspect-data` résume le CSV sans appeler votre code; utilisez `make check-data`
-une fois `validate` implémentée.
+`make import-tp2` vérifie tous les fichiers obligatoires, le quality gate, les
+métriques, le manifeste et le hash avant de copier quoi que ce soit. En cas de
+`REJECT` ou de manifeste incohérent, l'espace TP3 reste inchangé.
 
-## Parcours
+## Démarrage
 
-Suivez les étapes de l'énoncé : audit → configuration et Git → validation minimale
-→ split et entraînement → évaluation → MLflow → quatre runs → remise.
-Lancez `make mlflow-server` dans un second terminal **depuis la même racine**;
-puis `make server-check` dans le premier. Les commandes utilisent `uv run`,
-sans activation manuelle de l'environnement.
+Prérequis : Python 3.10+, Git, `uv`, Docker démarré et `curl`.
 
-Exécutions obligatoires : `C01` (C=0.1), `A` (C=1), `B` (répétition de A),
-`C10` (C=10). Après chacune : `make snapshot LABEL=C01` (adapter le label).
-Ne changez que C entre les expériences; conservez seed, split, seuil et coûts.
-Le fichier créé par `make config` commence à `C=1.0` : avant le premier
-entraînement, mettez explicitement `model.C: 0.1`, committez ce changement et
-lancez C01. `make compare` compare A et B. Les chemins et champs obligatoires sont définis
-dans `docs/contrat.md` et dans le PDF. Les datasets externes sont réservés au TP2.
+```bash
+make install
+make doctor
+make report
+```
 
-## Remise
+Avec un livrable TP2 :
 
-Complétez uniquement `reports/tp1_report.md`, avec vos captures dans
-`reports/figures/`. Répondez aux six questions Q1–Q6 du modèle, identiques au PDF.
-Une extension est facultative, après le parcours obligatoire.
+```bash
+make import-tp2 TP2_DIR=/chemin/vers/TP2
+make validate-tp2
+```
+
+Sans livrable TP2 :
+
+```bash
+make bootstrap-reference
+make validate-tp2
+```
+
+## Parcours obligatoire
+
+### 1. Contrat et service FastAPI
+
+Le service expose `/health`, `/model-info`, `/predict` et `/metrics`, ainsi que
+leurs équivalents versionnés sous `/v1`. Les routes historiques restent
+disponibles pour assurer une migration progressive vers le contrat versionné.
+`/metrics` est un endpoint machine-to-machine destiné à Prometheus : il ne
+constitue pas une page de monitoring et ne doit pas être consommé par un
+frontend métier comme un dashboard.
+Pydantic refuse les champs inconnus (`extra="forbid"`) et les valeurs hors
+contrat. `/health` retourne `503` si le modèle n'est pas chargé. Les réponses de
+`/model-info` et `/predict` identifient toujours le nom, l'alias et la version
+effectivement résolus.
+
+Chaque réponse contient `X-Request-ID`. Les erreurs `422` et `503` utilisent une
+enveloppe JSON stable (`error.code`, `error.message`, `error.request_id` et,
+si nécessaire, `error.details`). Les origines CORS sont désactivées par défaut
+et peuvent être autorisées explicitement avec `CORS_ALLOWED_ORIGINS` pour un
+frontend local.
+
+```bash
+make test
+make openapi
+make api                  # autre terminal
+python scripts/smoke_test.py --base-url http://127.0.0.1:8000
+```
+
+Le service Registry utilise par défaut :
+
+```text
+models:/predictive-maintenance@champion
+```
+
+La configuration unique est dans `configs/service.yaml` et est effectivement
+consommée par l'API. Les variables `MLFLOW_TRACKING_URI`, `MODEL_NAME`,
+`MODEL_ALIAS` et `MODEL_SOURCE` ne servent qu'à surcharger explicitement cette
+configuration. Le mode local `MODEL_SOURCE=local` est réservé au smoke test
+Docker et exige lui aussi un gate `ACCEPT` et un hash cohérent.
+
+Le contrat OpenAPI exporté se trouve dans `contracts/openapi.json`. Après une
+modification de route ou de schéma, exécutez `make openapi` et vérifiez le test
+`tests/test_openapi_contract.py`.
+
+### 2. Registry MLflow et promotion
+
+Dans un terminal séparé, démarrez le backend local SQLite :
+
+```bash
+make mlflow-server
+```
+
+Puis, dans le workspace :
+
+```bash
+make register
+make select
+make promote
+```
+
+Pour observer une vraie comparaison, enregistrez deux candidats issus de deux
+entrées TP2 `ACCEPT` distinctes. Promouvez le premier, sélectionnez le second,
+puis documentez `PROMOTE` ou `KEEP_CHAMPION`. Pour le rollback, choisissez une
+version différente de la version actuellement portée par `champion` : le script
+refuse explicitement un rollback sans changement d'alias.
+
+Les scripts appliquent `configs/promotion_policy.yaml` dans cet ordre :
+
+1. vérifier le quality gate, les métriques et la latence ;
+2. classer les versions éligibles et affecter `challenger` ;
+3. comparer challenger et champion ;
+4. écrire `PROMOTE` ou `KEEP_CHAMPION` ;
+5. ne déplacer `champion` que si la politique l'autorise.
+
+Un candidat éligible n'est donc pas automatiquement promu. Les anciens stages
+MLflow ne sont pas utilisés : seuls les alias `challenger` et `champion` sont
+attendus. Les cinq preuves JSON sont obligatoires :
+
+```text
+reports/registration.json
+reports/model_selection.json
+reports/promotion_decision.json
+reports/rollback_decision.json
+reports/release_manifest.json
+```
+
+Avant de transmettre le résultat au TP4, vérifiez que
+`release_manifest.json` décrit le modèle effectivement porté par l'alias
+`champion`. Sa version peut différer de celle de `registration.json` après
+`KEEP_CHAMPION` ou rollback ; elle doit correspondre à la décision finale,
+porter son propre `run_id`, le même `data_sha256` et `quality_gate: ACCEPT`.
+TP4 refusera un handoff incomplet, un candidat `REJECT` ou une version
+effective incohérente.
+
+Démonstration du retour arrière :
+
+```bash
+make rollback ROLLBACK_VERSION=1
+```
+
+Le rollback réaffecte `champion` sans supprimer de version et doit être vérifié
+avec `/model-info`.
+
+### 3. Docker et smoke test
+
+Le Dockerfile installe les dépendances runtime exportées depuis `uv.lock`,
+utilise l'utilisateur non-root `app`, déclare un `HEALTHCHECK` et n'embarque ni
+base MLflow, ni cache, ni secret. Le runtime utilise `mlflow-skinny` ; le paquet
+MLflow complet reste réservé aux commandes de développement et au serveur local
+du Registry ; `skops` est conservé dans le runtime pour charger les artefacts
+scikit-learn produits par MLflow.
+
+Les commandes Docker appliquent également un système de fichiers en lecture
+seule, un `/tmp` temporaire, la suppression des capabilities et
+`no-new-privileges`.
+
+```bash
+make docker-build
+make docker-smoke
+```
+
+Le smoke test vérifie `/health`, `/model-info`, `/predict` et `/metrics`, et
+nettoie le conteneur même si une requête échoue. Les logs doivent montrer le
+démarrage Uvicorn, jamais un entraînement.
+
+Les contrôles de chaîne logicielle sont disponibles séparément :
+
+```bash
+make security-audit       # pip-audit sur requirements.txt
+make image-scan           # Trivy, si installé
+```
+
+Ils complètent la CI de base sans rendre le TP dépendant d'un scanner local
+particulier.
+
+### 4. CI GitHub Actions
+
+`.github/workflows/mlops-ci.yml` reproduit le parcours local :
+
+```text
+uv sync --locked → ruff → pytest/JUnit → bootstrap de référence
+→ docker build → conteneur → smoke test HTTP
+```
+
+La CI vérifie le candidat et l'image, mais ne lance jamais `register`, `select`,
+`promote` ou `rollback`. Une promotion est une décision de release explicite,
+auditable et séparée de la pull request.
+
+Provoquez aussi un échec contrôlé (par exemple un test ou une commande de
+validation isolée), puis remettez le dépôt dans son état nominal et archivez la
+preuve de l'échec ainsi que celle du job vert.
+
+## Rapport et archive
+
+```bash
+make report
+```
+
+Complétez l'unique fichier `reports/tp3_report.md` et placez les captures réelles
+dans `reports/figures/`. Le rapport doit contenir la continuité TP2, le contrat
+API, Docker, la CI, l'enregistrement, la sélection, la promotion, le rollback,
+le contrat OpenAPI, `release_manifest.json`, les réponses Q1 à Q8 et l'index des
+preuves. Le validateur exige au moins treize preuves visuelles, les cinq JSON
+Registry/release, un rapport JUnit vert et
+l'absence de marqueurs de brouillon.
+
+Avant remise :
 
 ```bash
 make validate-submission
-make package NAME=Nom_Prenom
+make package ARCHIVE=MLOps_TP3_Nom_Prenom.zip
+unzip -tq MLOps_TP3_Nom_Prenom.zip
 ```
 
-L'archive `MLOps_TP1_Nom_Prenom.zip` est écrite dans le dossier parent. Elle
-contient code, données, configuration, modèle, rapports et snapshots MLflow;
-elle exclut `.venv/`, `.git/`, caches, `mlflow.db` et `mlartifacts/`.
-Un lecteur peut inspecter les snapshots hors ligne; rejouer crée de nouveaux
-runs sur son propre serveur. Un identifiant de votre serveur local n'est pas
-un lien consultable sur une autre machine.
+L'archive est individuelle et exclut `.venv`, caches, bases MLflow locales,
+fichiers temporaires, logs et secrets, mais conserve le rapport, les décisions,
+le JUnit et les preuves nécessaires à l'audit. Le TP4 consommera directement l'alias
+`models:/predictive-maintenance@champion`, `/model-info` et le contrat de
+`/predict`.

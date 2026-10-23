@@ -1,0 +1,16 @@
+{
+  "registered_model": "predictive-maintenance",
+  "version": "2",
+  "run_id": "29e124a23bdb4dd8a231e91c161417de",
+  "data_sha256": "5598644bc8721601c7855bea95fba27b41e2edfb4cf57f497e93b1d49cf08cfa",
+  "quality_gate": "ACCEPT",
+  "metrics": {
+    "accuracy": 0.9608,
+    "precision": 0.7792207792207793,
+    "recall": 0.6521739130434783,
+    "f1": 0.7100591715976331,
+    "latency_ms": 0.01449272320005548
+  },
+  "model_uri": "models:/predictive-maintenance/2",
+  "generated_at": "2026-10-23T14:36:15.097012+00:00"
+}

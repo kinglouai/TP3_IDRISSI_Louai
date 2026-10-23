@@ -1,0 +1,13 @@
+{
+  "run_id": "tp3-candidate-2-run",
+  "data_sha256": "5598644bc8721601c7855bea95fba27b41e2edfb4cf57f497e93b1d49cf08cfa",
+  "metrics": {
+    "accuracy": 0.9608,
+    "precision": 0.7792207792207793,
+    "recall": 0.6521739130434783,
+    "f1": 0.7100591715976331,
+    "latency_ms": 0.01449272320005548
+  },
+  "model_artifact": "models/model.joblib",
+  "source": "trained-candidate-2"
+}

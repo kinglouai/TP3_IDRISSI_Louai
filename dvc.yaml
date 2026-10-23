@@ -1,0 +1,68 @@
+stages:
+  validate:
+    cmd: python -m maintenance_ml.data.validate
+    deps:
+      - maintenance_ml/data/validate.py
+      - maintenance_ml/data/schema.py
+      - data/raw/machines.csv
+    outs:
+      - reports/data_validation.json:
+          cache: false
+
+  prepare:
+    cmd: python -m maintenance_ml.data.prepare
+    deps:
+      - maintenance_ml/data/prepare.py
+      - reports/data_validation.json
+      - data/raw/machines.csv
+    params:
+      - seed
+      - test_size
+    outs:
+      - data/processed/train.csv
+      - data/processed/test.csv
+
+  train:
+    cmd: python -m maintenance_ml.modeling.train
+    deps:
+      - maintenance_ml/modeling/train.py
+      - data/processed/train.csv
+    params:
+      - seed
+      - model.C
+      - model.max_iter
+    outs:
+      - models/model.joblib
+
+  evaluate:
+    cmd: python -m maintenance_ml.modeling.evaluate
+    deps:
+      - maintenance_ml/modeling/evaluate.py
+      - data/processed/test.csv
+      - models/model.joblib
+    metrics:
+      - reports/metrics.json:
+          cache: false
+    outs:
+      - reports/run_manifest.json:
+          cache: false
+    params:
+      - mlflow.tracking_uri
+      - mlflow.experiment_name
+
+  quality_gate:
+    cmd: python -m maintenance_ml.modeling.quality_gate
+    deps:
+      - maintenance_ml/modeling/quality_gate.py
+      - reports/metrics.json
+      - reports/run_manifest.json
+      - quality_gates/baseline_metrics.json
+    params:
+      - quality_gate.min_recall
+      - quality_gate.min_precision
+      - quality_gate.min_f1
+      - quality_gate.max_recall_drop
+      - quality_gate.max_f1_drop
+    outs:
+      - reports/quality_gate_decision.json:
+          cache: false

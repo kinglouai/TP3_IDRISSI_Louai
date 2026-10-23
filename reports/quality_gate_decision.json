@@ -1,0 +1,54 @@
+{
+  "decision": "ACCEPT",
+  "accepted": true,
+  "checks": [
+    {
+      "name": "minimum_accuracy",
+      "observed": 0.9608,
+      "threshold": 0.88,
+      "passed": true
+    },
+    {
+      "name": "minimum_recall",
+      "observed": 0.6521739130434783,
+      "threshold": 0.6,
+      "passed": true
+    },
+    {
+      "name": "minimum_f1",
+      "observed": 0.7100591715976331,
+      "threshold": 0.64,
+      "passed": true
+    },
+    {
+      "name": "baseline_recall",
+      "observed": 0.6521739130434783,
+      "baseline": 0.62,
+      "allowed_drop": 0.03,
+      "passed": true
+    },
+    {
+      "name": "baseline_f1",
+      "observed": 0.7100591715976331,
+      "baseline": 0.66,
+      "allowed_drop": 0.02,
+      "passed": true
+    }
+  ],
+  "reasons": [],
+  "metrics": {
+    "accuracy": 0.9608,
+    "precision": 0.7792207792207793,
+    "recall": 0.6521739130434783,
+    "f1": 0.7100591715976331,
+    "latency_ms": 0.01449272320005548
+  },
+  "baseline": {
+    "accuracy": 0.9,
+    "precision": 0.7,
+    "recall": 0.62,
+    "f1": 0.66,
+    "latency_ms": 20.0,
+    "model_version": "baseline-v1"
+  }
+}

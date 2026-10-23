@@ -1,0 +1,37 @@
+{
+  "selected_candidate": "2",
+  "challenger_alias": "challenger",
+  "candidate": {
+    "version": "2",
+    "f1": 0.7100591715976331,
+    "recall": 0.6521739130434783,
+    "latency_ms": 0.01449272320005548,
+    "quality_gate": true,
+    "data_sha256": "5598644bc8721601c7855bea95fba27b41e2edfb4cf57f497e93b1d49cf08cfa",
+    "is_current_champion": false,
+    "eligible": true
+  },
+  "versions": [
+    {
+      "version": "2",
+      "f1": 0.7100591715976331,
+      "recall": 0.6521739130434783,
+      "latency_ms": 0.01449272320005548,
+      "quality_gate": true,
+      "data_sha256": "5598644bc8721601c7855bea95fba27b41e2edfb4cf57f497e93b1d49cf08cfa",
+      "is_current_champion": false,
+      "eligible": true
+    },
+    {
+      "version": "1",
+      "f1": 0.7142857142857143,
+      "recall": 0.6521739130434783,
+      "latency_ms": 0.020067499200013116,
+      "quality_gate": true,
+      "data_sha256": "5598644bc8721601c7855bea95fba27b41e2edfb4cf57f497e93b1d49cf08cfa",
+      "is_current_champion": true,
+      "eligible": false
+    }
+  ],
+  "generated_at": "2026-10-23T14:36:28.469127+00:00"
+}

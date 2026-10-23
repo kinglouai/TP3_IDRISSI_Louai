@@ -1,0 +1,11 @@
+model:
+  C: 2.0
+  max_iter: 1000
+quality:
+  max_f1_regression: 0.02
+  max_recall_regression: 0.03
+  min_accuracy: 0.88
+  min_f1: 0.64
+  min_recall: 0.6
+seed: 42
+test_size: 0.25

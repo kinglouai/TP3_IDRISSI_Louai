@@ -1,0 +1,8 @@
+{
+  "alias": "champion",
+  "previous_version": "2",
+  "restored_version": "1",
+  "decision": "ROLLBACK",
+  "reason": "explicit operator request",
+  "generated_at": "2026-10-23T15:58:55.580996+00:00"
+}

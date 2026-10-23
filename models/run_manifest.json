@@ -1,0 +1,14 @@
+{
+  "run_id": "682ce8de184e4cdd82c854e9fc8b5488",
+  "mlflow_run_id": "682ce8de184e4cdd82c854e9fc8b5488",
+  "parent_run_id": "9c72e502d4cb4c6a94ef154dacd663f6",
+  "git_commit": "132c862c3afeeb18c985576c96cd259c5ca39e89",
+  "data_sha256": "dc6790ab24276b7ad59f97149734dbb444e7ca7218173387ec6a4501aca70af3",
+  "model_artifact": "models/model.joblib",
+  "metrics": {
+    "accuracy": 0.9712,
+    "precision": 0.7692307692307693,
+    "recall": 0.4,
+    "f1": 0.5263157894736842
+  }
+}

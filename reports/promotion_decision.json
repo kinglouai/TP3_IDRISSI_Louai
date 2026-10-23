@@ -1,0 +1,13 @@
+{
+  "champion_version": "1",
+  "challenger_version": "2",
+  "decision": "KEEP_CHAMPION",
+  "reasons": {
+    "f1_gain": -0.004226542688081203,
+    "recall_gain": 0.0,
+    "challenger_latency_ms": 0.01449272320005548,
+    "minimum_f1_gain": 0.01,
+    "minimum_recall_gain": -0.01
+  },
+  "generated_at": "2026-10-23T15:56:41.465331+00:00"
+}

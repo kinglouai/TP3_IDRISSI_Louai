@@ -1,0 +1,7 @@
+{
+  "source": "bootstrap-reference",
+  "quality_gate": "ACCEPT",
+  "parent_run_id": "tp3-reference-run",
+  "data_sha256": "5598644bc8721601c7855bea95fba27b41e2edfb4cf57f497e93b1d49cf08cfa",
+  "model_artifact": "models/model.joblib"
+}
